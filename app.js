@@ -58,9 +58,6 @@ app.post("/compose",function(req,res){
 
   posts.push(post);
 
-  // console.log(req.body.composeTitle);
-  // console.log(req.body.composeText);
-
   res.redirect("/");
   
 })
@@ -74,6 +71,7 @@ app.get("/post/:tittle",function(req,res){
       console.log("match found...");
 
       res.render('post',{postdata:posts[i]});
+      
       temp=1;
     }
   };
