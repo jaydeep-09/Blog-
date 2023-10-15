@@ -3,12 +3,15 @@
 <h1>Home</h1>
 <p><%= data %></p>
 
-<% ComposePost.forEach(function(post){ %>
 
-    <h1><%= post.Title %></h1>
-    <p><%= post.Text %></p>
+    <% ComposePost.forEach(function(post){ %>
+    
+        <h1><a style="text-decoration: none;color:black" href="post/<%=post.Title%>"><%= post.Title %></a></h1>
+        <p><%= post.Text %></p>
+    
+    <% }); %>
 
-<% }); %>
+
 
 
 
