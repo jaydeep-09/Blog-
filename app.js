@@ -1,9 +1,11 @@
 // jshint esversion:6
 
 const express = require("express");
+const mongoose=require("mongoose");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const _ =require("lodash");
+
 
 
 const homeStartingContent = "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
@@ -12,21 +14,59 @@ const contactContent = "Scelerisque eleifend donec pretium vulputate sapien. Rho
 
 const app = express();
 
+app.use(express.static("public"));
+
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: true}));
+
 app.use(express.static("public"));
 
+const dburl="mongodb://jaydeepsingh:<password>@ac-ugvrxwe-shard-00-00.wkgajyd.mongodb.net:27017,ac-ugvrxwe-shard-00-01.wkgajyd.mongodb.net:27017,ac-ugvrxwe-shard-00-02.wkgajyd.mongodb.net:27017/?ssl=true&replicaSet=atlas-4dug4h-shard-0&authSource=admin&retryWrites=true&w=majority";
+// const dburl="mongodb://127.0.0.1:27017/Blog";
+mongoose.connect(dburl)
+.then(
+  ()=>{
+    console.log("mongodb connection is successfull.......");
+  }
+  )
+  .catch((err)=>{
+    console.log(err);
+  })
+  
+  var posts=[];
+const PostSchema={
+  Title:String,
+  Text:String
+}
 
-var posts=[];
-
+const Posts=mongoose.model("post",PostSchema);
 
 app.get("/",function(req,res){
 
-  res.render('home',{
-    data:homeStartingContent,
-    ComposePost:posts
-  });
+  async function getpostdata(){
+     const post=await Posts.find();
+
+     if(!post){
+      res.render('home',{
+        data:homeStartingContent,
+        ComposePost:[]
+    
+      });
+     }
+     else{
+      res.render('home',{
+
+        data:homeStartingContent,
+        ComposePost:post
+    
+      });
+     }
+
+  }
+  
+  getpostdata();
+ 
 
 });
 
@@ -35,6 +75,7 @@ app.get("/about",function(req,res){
   res.render('about',{aboutdata:aboutContent});
 
 });
+
 app.get("/contact",function(req,res){
 
   res.render('contact',{contactdata:contactContent});
@@ -49,34 +90,44 @@ app.get("/compose",function(req,res){
 
 app.post("/compose",function(req,res){
 
-  const post={
+  const newpost=new Posts({
 
     Title :_.capitalize(req.body.composeTitle),
     Text :req.body.composeText
 
-  };
+  });
 
-  posts.push(post);
+  newpost.save();
 
   res.redirect("/");
   
 })
 
-app.get("/post/:tittle",function(req,res){
+
+
+
+app.get("/post/:post_id",function(req,res){
   
-  const newpost=_.capitalize(req.params.tittle);
-  var temp=0;
-  for(var i=0;i<posts.length;i++){
-    if(posts[i].Title===newpost){
-      console.log("match found...");
+  const postId=req.params.post_id;
 
-      res.render('post',{postdata:posts[i]});
-      
-      temp=1;
+  async function find(post_id){
+
+    const foundPost=await Posts.findOne({_id:post_id});
+  
+    if(foundPost){
+  
+      console.log("match found");
+      res.render('post',{postdata:foundPost})
+
     }
-  };
+    else{
+  
+      res.redirect("/");
+    }
+    
+  }
 
-  if(temp!=1)res.redirect("/");
+   find(postId);
 
 })
 
